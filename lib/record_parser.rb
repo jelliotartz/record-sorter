@@ -1,44 +1,63 @@
 require 'csv'
+require 'Date'
 
 csv_file = ARGV[0]
-space_file = ARGV[1]
-pipe_file = ARGV[2]
+ssv_file = ARGV[1]
+psv_file = ARGV[2]
+sort_param = ARGV[3]
 
-def parse_files(csv_file, space_file, pipe_file)
-	parsed_records = []
-	parsed_records << parse_csv_files(csv_file)
-	parsed_records << parse_space_files(space_file)
-	parsed_records << parse_pipe_files(pipe_file)
-	parsed_records
+CSV::Converters[:to_date] = lambda { |string| 
+	begin
+		Date.parse(string)
+	rescue ArgumentError
+		string
+	end
+}
+
+CSV::Converters[:strip_white_space] = lambda { |string| string ? string.strip : nil }
+
+def parse_files(csv_file, ssv_file, psv_file)
+	parsed_records = parse_csv_file(csv_file)
+	parsed_records.push(*parse_ssv_file(ssv_file))
+	parsed_records.push(*parse_psv_file(psv_file))
 end
 
-def parse_csv_files(file)
-	# :converters removes whitespace from data
-	parsed = CSV.read(
+def parse_csv_file(file)
+	CSV.read(
 		file, 
-		:converters => lambda {|f| f ? f.strip : nil}, 
-		:write_headers => true, 
-		:headers => ["LastName", "FirstName", "Gender", "FavoriteColor", "DateOfBirth"]
+		:headers => true, 
+		:converters => CSV::Converters.keys + [:strip_white_space] + [:to_date]
 	)
 end
 
-def parse_space_files(file)
+def parse_ssv_file(file)
   parsed = CSV.read(
   	file,
   	col_sep: " ",
-  	:write_headers => true,
-  	:headers => ["LastName", "FirstName", "Gender", "FavoriteColor", "DateOfBirth"]
-	)
+  	:headers => true,
+  	:converters => CSV::Converters.keys + [:strip_white_space] + [:to_date]
+	).to_a[1..-1]
 end
 
-def parse_pipe_files(file)
-	# :converters removes whitespace from data
+def parse_psv_file(file)
   parsed = CSV.read(
   	file,
   	col_sep: "|",
-  	:converters => lambda {|f| f ? f.strip : nil},
-  	:write_headers => true, :headers => ["LastName", "FirstName", "Gender", "FavoriteColor", "DateOfBirth"]
-	)
+  	:headers => true,
+  	:converters => CSV::Converters.keys + [:strip_white_space] + [:to_date]
+	).to_a[1..-1]
 end
 
-puts parse_files(csv_file, space_file, pipe_file)
+def sort_data(sort_param, records)
+	case sort_param
+	when "gender" then sorted = records.sort_by { |record| record.values_at('gender', 'last_name') }
+	when "date_of_birth" then sorted = records.sort_by { |record| record['date_of_birth']	}
+	when "last_name" then sorted = records.sort_by { |record| record.values_at('last_name') }
+	else puts 'invalid sort parameter!'
+	end
+
+	sorted ? sorted.each { |record| p record } : nil
+end
+
+parsed_records = parse_files(csv_file, ssv_file, psv_file)
+sort_data(sort_param, parsed_records)
