@@ -42,7 +42,7 @@ def sort_data(sort_param, records)
 	case sort_param
 	when "gender" then sorted = records.sort_by { |record| record.values_at('gender', 'last_name') }
 	when "date_of_birth" then sorted = records.sort_by { |record| record['date_of_birth']	}
-	when "last_name" then sorted = records.sort_by { |record| record.values_at('last_name') }
+	when "last_name" then sorted = records.sort_by { |record| record.values_at('last_name') }.reverse
 	else puts 'invalid sort parameter!'
 	end
 
