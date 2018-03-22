@@ -2,11 +2,12 @@ require 'csv'
 require 'Date'
 require 'pry'
 require 'table_print'
+require_relative './../config/db_config'
 
-csv_file = ARGV[0]
-ssv_file = ARGV[1]
-psv_file = ARGV[2]
-sort_param = ARGV[3]
+csv_file = RECORD_SEEDS_CSV_FILE_PATH
+psv_file = RECORD_SEEDS_PSV_FILE_PATH
+ssv_file = RECORD_SEEDS_SSV_FILE_PATH
+sort_param = ARGV[0]
 
 CSV::Converters[:to_date] = lambda { |string| 
 	begin
@@ -54,7 +55,7 @@ def display(sorted_data)
 end
 
 def save(records)
-	File.open('db/records_db.csv', "w") do |file|
+	File.open(DB_FILE_PATH, "w") do |file|
 		file.write(records)
 	end
 end

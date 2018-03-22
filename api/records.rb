@@ -2,12 +2,13 @@ require "cuba"
 require "cuba/safe"
 require "pry"
 require "csv"
+require_relative './../config/db_config'
 
 Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 Cuba.plugin Cuba::Safe
 
 Cuba.define do
-	records = CSV.read('db/records_db.csv', headers: true)
+	records = CSV.read(DB_FILE_PATH, headers: true)
 
 	on get, "records/:sort_parameter" do |sort_parameter|
 		case sort_parameter
@@ -24,7 +25,7 @@ Cuba.define do
 		on "records" do
 			on param("last_name"), param("first_name"), param("gender"), param("favorite_color"), param("date_of_birth") do | last_name, first_name, gender, favorite_color, date_of_birth |
 				records << [last_name, first_name, gender, favorite_color, date_of_birth]
-				File.open('db/records_db.csv', "w") do |file|
+				File.open(DB_FILE_PATH, "w") do |file|
 					file.write(records)
 				end
 			end
