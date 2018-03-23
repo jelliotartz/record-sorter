@@ -3,6 +3,7 @@ require "cuba/safe"
 require "pry"
 require "csv"
 require_relative './../config/db_config'
+require_relative './../lib/record_parser'
 
 Cuba.use Rack::Session::Cookie, :secret => "__a_very_long_string__"
 Cuba.plugin Cuba::Safe
@@ -11,14 +12,10 @@ Cuba.define do
 	records = CSV.read(DB_FILE_PATH, headers: true)
 
 	on get, "records/:sort_parameter" do |sort_parameter|
-		case sort_parameter
-		when "gender" then sorted = records.sort_by { |record| record.values_at('gender', 'last_name') }
-		when "date_of_birth" then sorted = records.sort_by { |record| record['date_of_birth']	}
-		when "last_name" then sorted = records.sort_by { |record| record.values_at('last_name') }
-		else puts 'invalid sort parameter!'
-		end
-		# formatted for readability. basic json reponse = res.write sorted.to_json
-		res.write JSON.pretty_generate(sorted)
+		sorted = sort_data(sort_parameter, records)
+
+		# res.write JSON.pretty_generate(sorted)
+		res.write sorted.to_json
 	end
 
 	on post do
@@ -30,6 +27,7 @@ Cuba.define do
 				end
 			end
 
+			# If the correct params are not provided, this block will get executed.
       on true do
         res.write "You need to provide the correct parameters!"
       end

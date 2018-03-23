@@ -11,7 +11,7 @@ sort_param = ARGV[0]
 
 CSV::Converters[:to_date] = lambda { |string| 
 	begin
-		Date.parse(string)
+		Date.parse(string).strftime('%-m/%-d/%Y')
 	rescue ArgumentError
 		string
 	end
@@ -42,25 +42,10 @@ end
 def sort_data(sort_param, records)
 	case sort_param
 	when "gender" then sorted = records.sort_by { |record| record.values_at('gender', 'last_name') }
-	when "date_of_birth" then sorted = records.sort_by { |record| record['date_of_birth']	}
+	when "date_of_birth" then sorted = records.sort_by { |record| Date.parse(record['date_of_birth'])	}
 	when "last_name" then sorted = records.sort_by { |record| record.values_at('last_name') }.reverse
 	else puts 'invalid sort parameter!'
 	end
-
-	sorted
 end
 
-def display(sorted_data)
-	tp sorted_data.map(&:to_h), :last_name, :first_name, :gender, :favorite_color, date_of_birth: lambda { |record| record['date_of_birth'].strftime('%-m/%-d/%Y')}
-end
 
-def save(records)
-	File.open(DB_FILE_PATH, "w") do |file|
-		file.write(records)
-	end
-end
-
-parsed_records = parse_files(csv_file, ssv_file, psv_file)
-save(parsed_records)
-sorted_data = sort_data(sort_param, parsed_records)
-display(sorted_data)
