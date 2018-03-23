@@ -38,7 +38,6 @@ def parse_without_header(file, delimiter)
 	parse_with_header(file, delimiter).to_a[1..-1]
 end
 
-
 def sort_data(sort_param, records)
 	case sort_param
 	when "gender" then sorted = records.sort_by { |record| record.values_at('gender', 'last_name') }
@@ -47,5 +46,3 @@ def sort_data(sort_param, records)
 	else puts 'invalid sort parameter!'
 	end
 end
-
-
